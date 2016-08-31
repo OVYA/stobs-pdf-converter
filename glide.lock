@@ -1,0 +1,14 @@
+hash: d1324d0430aa42705f3e14c7e634a2a93c5048cc2c4fa66c701ee53d07186928
+updated: 2016-08-31T11:48:03.785660778+02:00
+imports:
+- name: github.com/mattn/go-gtk
+  version: f1b522380f46233d2124399c1c7521400e2e9905
+  subpackages:
+  - glib
+  - gtk
+  - gdk
+  - gdkpixbuf
+  - pango
+- name: github.com/mattn/go-pointer
+  version: 390b30acbf45a7b1fd329503a66a7b37071da178
+devImports: []

@@ -1,0 +1,6 @@
+package: .
+import:
+- package: github.com/mattn/go-gtk
+  subpackages:
+  - glib
+  - gtk
