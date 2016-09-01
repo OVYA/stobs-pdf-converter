@@ -191,9 +191,9 @@ func catFile(fileName, txtVerso *gtk.Entry) {
 			if ko != nil {
 				log.Fatal(ko)
 			}
-			cmd = exec.Command("chromium", "--app=file:///tmp/out.pdf")
+			cmd = exec.Command("evince", "/tmp/out.pdf")
 		} else {
-			cmd = exec.Command("chromium", "--app=file://"+file)
+			cmd = exec.Command("evince", file)
 
 		}
 		err := cmd.Run()
