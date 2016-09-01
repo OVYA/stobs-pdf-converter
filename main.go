@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"os/exec"
 	"strconv"
@@ -104,7 +105,9 @@ func main() {
 		}
 
 		if cat == true {
-			cmd := exec.Command("sh", "-c", "cp /tmp/out.pdf "+strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1))
+			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
+			file = strings.Replace(file, " ", "\\ ", 1)
+			cmd := exec.Command("sh", "-c", "cp /tmp/out.pdf "+file)
 			ko := cmd.Run()
 			if ko != nil {
 				log.Fatal(ko)
@@ -179,29 +182,37 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 	var ret string
 	if fileName.GetText() != "" {
 		file := fileName.GetText()
+
 		if txtVerso.GetText() != "" {
 			nbVerso, err := strconv.Atoi(txtVerso.GetText())
 			if err != nil {
 				log.Fatal(err)
 			}
-			j := nbVerso
-			cmdText := " cat"
-			for i := 1; i <= nbVerso; i++ {
-				cmdText += " " + strconv.Itoa(i)
-				if j < nbPages {
-					cmdText += " " + strconv.Itoa(j)
+			if nbVerso < nbPages {
+				j := nbVerso
+
+				cmdText := " cat"
+				for i := 1; i < nbPages; i++ {
+					if i < nbVerso {
+						cmdText += " " + strconv.Itoa(i)
+					}
+					if j <= nbPages {
+						cmdText += " " + strconv.Itoa(j)
+					}
+					j++
 				}
-				j++
+				cmd = exec.Command("sh", "-c", "pdftk "+strings.Replace(file, " ", "\\ ", 1)+cmdText+" output /tmp/out.pdf")
+				ko := cmd.Run()
+
+				if ko != nil {
+					fmt.Println(ko)
+					log.Fatal(ko)
+				}
+				cat = true
+				ret = "/tmp/out.pdf"
+			} else {
+				ret = file
 			}
-			cmd = exec.Command("sh", "-c", "pdftk "+file+cmdText+" output /tmp/out.pdf")
-			ko := cmd.Run()
-			if ko != nil {
-				log.Fatal(ko)
-			}
-			cat = true
-			ret = "/tmp/out.pdf"
-		} else {
-			ret = file
 		}
 	}
 	return ret
