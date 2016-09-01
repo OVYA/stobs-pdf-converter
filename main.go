@@ -99,6 +99,10 @@ func main() {
 	//btSave
 	btSave := gtk.NewButtonWithLabel("Enregistrer")
 	btSave.Clicked(func() {
+		if cat == false && txtVerso.GetText() != "" {
+			catFile(fileName, txtVerso)
+		}
+
 		if cat == true {
 			cmd := exec.Command("sh", "-c", "cp /tmp/out.pdf "+strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1))
 			ko := cmd.Run()
@@ -118,7 +122,9 @@ func main() {
 	//btn Visualiser le fichier
 	btShowFile := gtk.NewButtonWithLabel("Visualiser le fichier")
 	btShowFile.Clicked(func() {
-		catFile(fileName, txtVerso)
+		if fileName.GetText() != "" {
+			displayfile(catFile(fileName, txtVerso))
+		}
 	})
 
 	// Ajout des elements dans leurs box correspondante
@@ -168,8 +174,9 @@ func execCommand(filename string) int {
 	return ret
 }
 
-func catFile(fileName, txtVerso *gtk.Entry) {
+func catFile(fileName, txtVerso *gtk.Entry) string {
 	var cmd *exec.Cmd
+	var ret string
 	if fileName.GetText() != "" {
 		file := fileName.GetText()
 		if txtVerso.GetText() != "" {
@@ -191,15 +198,20 @@ func catFile(fileName, txtVerso *gtk.Entry) {
 			if ko != nil {
 				log.Fatal(ko)
 			}
-			cmd = exec.Command("evince", "/tmp/out.pdf")
+			cat = true
+			ret = "/tmp/out.pdf"
 		} else {
-			cmd = exec.Command("evince", file)
+			ret = file
+		}
+	}
+	return ret
+}
 
-		}
-		err := cmd.Run()
-		if err != nil {
-			log.Fatal(err)
-		}
-		cat = true
+func displayfile(file string) {
+	var cmd *exec.Cmd
+	cmd = exec.Command("evince", file)
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
