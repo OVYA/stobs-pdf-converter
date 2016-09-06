@@ -14,6 +14,7 @@ import (
 
 var nbPages int
 var cat = false
+var outFile string
 
 func main() {
 
@@ -92,6 +93,7 @@ func main() {
 				nbPages = execCommand(filechooserdialog.GetFilename())
 				lblPage.SetText("Le fichier séléctionné contient " + strconv.Itoa(nbPages) + " pages.")
 			}
+			normalizeFileName(fileName.GetText())
 			filechooserdialog.Destroy()
 		})
 		filechooserdialog.Run()
@@ -105,8 +107,9 @@ func main() {
 		}
 
 		if cat == true {
-			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
-			file = strings.Replace(file, " ", "\\ ", 1)
+
+			file := strings.Replace(outFile, ".pdf", "_recto_verso_ok.pdf", 1)
+			fmt.Println(file)
 			cmd := exec.Command("sh", "-c", "cp /tmp/out.pdf "+file)
 			ko := cmd.Run()
 			if ko != nil {
@@ -165,7 +168,6 @@ func execCommand(filename string) int {
 	fileInfo = make(map[string]string)
 	for i := 0; i < len(res); i++ {
 		value := strings.Split(res[i], ": ")
-		//fmt.Println(len(value))
 		if len(value) == 2 {
 			fileInfo[value[0]] = value[1]
 		}
@@ -201,7 +203,7 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 					}
 					j++
 				}
-				cmd = exec.Command("sh", "-c", "pdftk "+strings.Replace(file, " ", "\\ ", 1)+cmdText+" output /tmp/out.pdf")
+				cmd = exec.Command("sh", "-c", "pdftk /tmp/in.pdf "+cmdText+" output /tmp/out.pdf")
 				ko := cmd.Run()
 
 				if ko != nil {
@@ -210,9 +212,9 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 				}
 				cat = true
 				ret = "/tmp/out.pdf"
-			} else {
-				ret = file
 			}
+		} else {
+			ret = file
 		}
 	}
 	return ret
@@ -224,5 +226,19 @@ func displayfile(file string) {
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func normalizeFileName(filename string) {
+	ret := filename
+	ret = strings.Replace(ret, " ", "\\ ", -1)
+	ret = strings.Replace(ret, "'", "\\'", -1)
+
+	outFile = ret
+
+	cmd := exec.Command("sh", "-c", "cp "+ret+" /tmp/in.pdf")
+	ko := cmd.Run()
+	if ko != nil {
+		log.Fatal(ko)
 	}
 }
