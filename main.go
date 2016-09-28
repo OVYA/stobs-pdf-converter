@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"io/ioutil"
+	"os"
 
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
@@ -15,6 +17,7 @@ import (
 var nbPages int
 var cat = false
 var outFile string
+var inFile string
 
 func main() {
 
@@ -24,6 +27,8 @@ func main() {
 	window.SetTitle("STOBS")
 	window.SetIconName("gtk-dialog-info")
 	window.Connect("destroy", func(ctx *glib.CallbackContext) {
+		defer os.Remove(inFile)
+		defer os.Remove(outFile)
 		gtk.MainQuit()
 	})
 
@@ -90,10 +95,13 @@ func main() {
 		filechooserdialog.Response(func() {
 			if filechooserdialog.GetFilename() != "" {
 				fileName.SetText(filechooserdialog.GetFilename())
-				nbPages = execCommand(filechooserdialog.GetFilename())
+				nbPages = getNumberOfPAges(filechooserdialog.GetFilename())
 				lblPage.SetText("Le fichier séléctionné contient " + strconv.Itoa(nbPages) + " pages.")
 			}
-			normalizeFileName(fileName.GetText())
+
+			//normalizeFileName(fileName.GetText())
+			createTempFile()
+			saveFile(inFile,fileName.GetText())
 			filechooserdialog.Destroy()
 		})
 		filechooserdialog.Run()
@@ -102,19 +110,13 @@ func main() {
 	//btSave
 	btSave := gtk.NewButtonWithLabel("Enregistrer")
 	btSave.Clicked(func() {
-		if cat == false && txtVerso.GetText() != "" {
+		if txtVerso.GetText() != "" && !cat {
 			catFile(fileName, txtVerso)
 		}
 
 		if cat == true {
-
-			file := strings.Replace(outFile, ".pdf", "_recto_verso_ok.pdf", 1)
-			fmt.Println(file)
-			cmd := exec.Command("sh", "-c", "cp /tmp/out.pdf "+file)
-			ko := cmd.Run()
-			if ko != nil {
-				log.Fatal(ko)
-			}
+			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
+			saveFile(file, outFile)
 			dial := gtk.NewMessageDialog(window, 1, 1, 1, "La modification du PDF a été effectué avec succès ")
 			dial.Response(func() {
 				dial.Destroy()
@@ -128,9 +130,13 @@ func main() {
 	//btn Visualiser le fichier
 	btShowFile := gtk.NewButtonWithLabel("Visualiser le fichier")
 	btShowFile.Clicked(func() {
-		if fileName.GetText() != "" {
-			displayfile(catFile(fileName, txtVerso))
+		if txtVerso.GetText() != "" {
+			catFile(fileName, txtVerso)
+			displayfile(outFile)
+		}else{
+			displayfile(inFile)
 		}
+
 	})
 
 	// Ajout des elements dans leurs box correspondante
@@ -154,7 +160,7 @@ func main() {
 	gtk.Main()
 }
 
-func execCommand(filename string) int {
+func getNumberOfPAges(filename string) int {
 
 	cmd := exec.Command("pdftk", filename, "dump_data")
 	var out bytes.Buffer
@@ -183,8 +189,6 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 	var cmd *exec.Cmd
 	var ret string
 	if fileName.GetText() != "" {
-		file := fileName.GetText()
-
 		if txtVerso.GetText() != "" {
 			nbVerso, err := strconv.Atoi(txtVerso.GetText())
 			if err != nil {
@@ -203,7 +207,11 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 					}
 					j++
 				}
-				cmd = exec.Command("sh", "-c", "pdftk /tmp/in.pdf "+cmdText+" output /tmp/out.pdf")
+
+				if err != nil {
+					log.Fatal(err)
+				}
+				cmd = exec.Command("sh", "-c", "pdftk " + inFile + " " + cmdText +" output " + outFile)
 				ko := cmd.Run()
 
 				if ko != nil {
@@ -211,10 +219,7 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 					log.Fatal(ko)
 				}
 				cat = true
-				ret = "/tmp/out.pdf"
 			}
-		} else {
-			ret = file
 		}
 	}
 	return ret
@@ -229,16 +234,39 @@ func displayfile(file string) {
 	}
 }
 
-func normalizeFileName(filename string) {
-	ret := filename
-	ret = strings.Replace(ret, " ", "\\ ", -1)
-	ret = strings.Replace(ret, "'", "\\'", -1)
 
-	outFile = ret
+/*
+**
+**  Create in and out temporary Files for safety manipulations
+**
+**/
 
-	cmd := exec.Command("sh", "-c", "cp "+ret+" /tmp/in.pdf")
-	ko := cmd.Run()
-	if ko != nil {
-		log.Fatal(ko)
+func createTempFile(){
+	//creating temp file
+	in, err := ioutil.TempFile("", "in.pdf")
+
+	out, err := ioutil.TempFile("", "out.pdf")
+
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	inFile = in.Name()
+	outFile = out.Name()
+
+}
+
+/*
+** Copy the content of the input file in the output file
+**
+** @Params filename string - output file
+** @Params input string - input file for content
+**/
+func saveFile (filename string, input string) {
+	in, err := ioutil.ReadFile(input)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ioutil.WriteFile(filename, in, 0666)
 }
