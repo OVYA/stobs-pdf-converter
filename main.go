@@ -9,6 +9,7 @@ import (
 	"strings"
 	"io/ioutil"
 	"os"
+	"runtime"
 
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
@@ -197,7 +198,7 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 			if nbVerso < nbPages {
 				j := nbVerso
 
-				cmdText := " cat"
+				cmdText := "cat "
 				for i := 1; i < nbPages; i++ {
 					if i < nbVerso {
 						cmdText += " " + strconv.Itoa(i)
@@ -211,7 +212,8 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 				if err != nil {
 					log.Fatal(err)
 				}
-				cmd = exec.Command("sh", "-c", "pdftk " + inFile + " " + cmdText +" output " + outFile)
+
+				cmd = exec.Command("bash", "-c", "pdftk " + inFile + " " + cmdText +" output " + outFile)
 				ko := cmd.Run()
 
 				if ko != nil {
@@ -227,7 +229,12 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 
 func displayfile(file string) {
 	var cmd *exec.Cmd
-	cmd = exec.Command("evince", file)
+
+	if runtime.GOOS == "linux" {
+		cmd = exec.Command("xdg-open", file)
+	}else if runtime.GOOS == "windows" {
+		cmd = exec.Command("start", file)
+	}
 	err := cmd.Run()
 	if err != nil {
 		log.Fatal(err)
@@ -242,6 +249,7 @@ func displayfile(file string) {
 **/
 
 func createTempFile(){
+
 	//creating temp file
 	in, err := ioutil.TempFile("", "in.pdf")
 
@@ -251,6 +259,10 @@ func createTempFile(){
 		log.Fatal(err)
 	}
 
+	if inFile != "" && outFile != "" {
+		os.Remove(inFile)
+		os.Remove(outFile)
+	}
 	inFile = in.Name()
 	outFile = out.Name()
 
