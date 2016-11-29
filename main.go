@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"os/exec"
 	"runtime"
@@ -32,53 +33,27 @@ func main() {
 		gtk.MainQuit()
 	})
 
-	// creation du conteneur Principal
-	vbox := gtk.NewVBox(false, 1)
-	vpaned := gtk.NewVPaned()
-	vPaned := gtk.NewVPaned()
-	vPaned2 := gtk.NewVPaned()
-	vPaned.SetSizeRequest(600, 550)
-	vpaned.Add(vPaned)
-	vpaned.Add(vPaned2)
-	vbox.Add(vpaned)
-
-	//
-	//CREATION DE L'INTERFACE
-	//
+	// TITLE
 	label := gtk.NewLabel("organisez vos PDF en Recto/Verso")
 	label.ModifyFontEasy("DejaVu Serif 14")
-
-	//creation du frame fichier
-	//contient tout les elements label, textBox ...
-	frame := gtk.NewFrame("Fichier")
-	framebox := gtk.NewVBox(false, 5)
-	frame.Add(framebox)
-
-	frame2 := gtk.NewFrame("")
-	framebox2 := gtk.NewVBox(false, 5)
-	frame2.Add(framebox2)
-
-	//ajout des elements au conteneur principal
-	vPaned.Pack1(label, false, false)
-	vPaned.Pack2(frame, false, false)
-	vPaned2.Pack1(frame2, false, false)
-
-	box1 := gtk.NewHBox(false, 5)
-	box2 := gtk.NewHBox(false, 5)
-	box3 := gtk.NewHBox(false, 5)
-	box4 := gtk.NewHBox(false, 5)
 
 	// label info fichier
 	lblPage := gtk.NewLabel("")
 
+	// label info
+	lblInfo := gtk.NewLabel("Par défaut la première page Verso est situé à la moitié")
+
 	// txtBox file
-	fileName := gtk.NewEntry()
-	fileName.SetText("")
+	lblFileName := gtk.NewLabel("Nom du fichier: ")
+	fileName := gtk.NewLabel("")
 
 	lblVerso := gtk.NewLabel("Indiquer la première page Verso: ")
 	txtVerso := gtk.NewEntry()
 	txtVerso.Connect("changed", func() {
-		cat = false
+		_, err := strconv.Atoi(txtVerso.GetText())
+		if err != nil {
+			txtVerso.SetText("")
+		}
 	})
 
 	// bouton ouverture file dialog
@@ -113,22 +88,13 @@ func main() {
 	//btSave
 	btSave := gtk.NewButtonWithLabel("Enregistrer")
 	btSave.Clicked(func() {
-		if txtVerso.GetText() != "" && !cat {
-			cat = catFile(fileName, txtVerso)
-		}
+
+		cat = catFile(fileName, txtVerso)
 
 		if cat == true {
 			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
 			saveFile(file, outFile)
 			dial := gtk.NewMessageDialog(window, 1, 1, 1, "La modification du PDF a été effectué avec succès.")
-			dial.Response(func() {
-				dial.Destroy()
-				cat = false
-			})
-
-			dial.Run()
-		} else {
-			dial := gtk.NewMessageDialog(window, 1, 1, 1, "Aucune modification n'a été apportée au fichier.")
 			dial.Response(func() {
 				dial.Destroy()
 				cat = false
@@ -141,40 +107,80 @@ func main() {
 	//btn Visualiser le fichier
 	btShowFile := gtk.NewButtonWithLabel("Visualiser le fichier")
 	btShowFile.Clicked(func() {
-		if txtVerso.GetText() != "" {
+		if fileName.GetText() != "" {
 			cat = catFile(fileName, txtVerso)
 			if cat {
 				displayfile(outFile)
 			} else {
-				dial := gtk.NewMessageDialog(window, 1, 1, 1, "La valeur indiquée pour la page Verso n'est pas valide ")
-				dial.Response(func() {
-					dial.Destroy()
-					cat = false
-				})
-
-				dial.Run()
+				displayfile(inFile)
 			}
-		} else {
-			displayfile(inFile)
 		}
-
 	})
 
-	// Ajout des elements dans leurs box correspondante
-	// 1 box correspond à une ligne de l'interface
-	box1.Add(fileName)
-	box1.Add(btOpenFile)
-	box2.Add(lblPage)
-	box3.Add(btShowFile)
-	box3.Add(btSave)
-	box4.Add(lblVerso)
-	box4.Add(txtVerso)
-	//Ajout des boxs à la fenetre principal
-	framebox.PackStart(box1, false, false, 10)
-	framebox.PackStart(box2, false, false, 10)
-	framebox.PackStart(box4, false, false, 10)
-	framebox2.PackStart(box3, false, false, 10)
-	//--------------------------------------------------------
+	//btn Visualiser le fichier original
+	btShowOriginalFile := gtk.NewButtonWithLabel("Visualiser l'original")
+	btShowOriginalFile.Clicked(func() {
+		if fileName.GetText() != "" {
+			displayfile(inFile)
+		}
+	})
+
+	//btSave
+	btCancel := gtk.NewButtonWithLabel("Annuler")
+	btCancel.Clicked(func() {
+		gtk.MainQuit()
+	})
+
+	// creation du conteneur Principal
+	vbox := gtk.NewVBox(false, 1)
+	vpaned := gtk.NewVPaned()
+	vpaned.SetSizeRequest(600, 530)
+	vboxContent := gtk.NewVBox(false, 1)
+
+	frameFile := gtk.NewFrame("Fichier")
+	fBoxFile := gtk.NewVBox(false, 1)
+	frameFile.Add(fBoxFile)
+
+	frameOpt := gtk.NewFrame("Options")
+	fBoxOpt := gtk.NewVBox(false, 1)
+	frameOpt.Add(fBoxOpt)
+
+	vboxSys := gtk.NewHBox(false, 1)
+	vboxSys.Add(btCancel)
+	vboxSys.Add(btSave)
+
+	vboxContent.Add(frameFile)
+	vboxContent.Add(frameOpt)
+
+	fileBox1 := gtk.NewHBox(false, 10)
+	fileBox1.Add(lblFileName)
+	fileBox1.Add(fileName)
+
+	fileBox2 := gtk.NewHBox(false, 10)
+	fileBox2.Add(lblPage)
+
+	fileBox3 := gtk.NewHBox(false, 10)
+	fileBox3.Add(btShowOriginalFile)
+	fileBox3.Add(btOpenFile)
+
+	fBoxFile.PackStart(fileBox1, false, false, 10)
+	fBoxFile.PackStart(fileBox2, false, false, 10)
+	fBoxFile.PackStart(fileBox3, false, false, 10)
+
+	optBox1 := gtk.NewHBox(false, 10)
+	optBox1.Add(lblVerso)
+	optBox1.Add(txtVerso)
+
+	fBoxOpt.PackStart(optBox1, false, false, 10)
+	fBoxOpt.PackStart(lblInfo, false, false, 10)
+	fBoxOpt.PackStart(btShowFile, false, false, 10)
+
+	vpaned.Pack1(vboxContent, false, false)
+
+	vbox.Add(label)
+	vbox.Add(vpaned)
+	vbox.Add(vboxSys)
+
 	window.Add(vbox)
 	window.SetSizeRequest(600, 600)
 	window.ShowAll()
@@ -207,41 +213,38 @@ func getNumberOfPAges(filename string) int {
 	return ret
 }
 
-func catFile(fileName, txtVerso *gtk.Entry) bool {
+func catFile(fileName *gtk.Label, txtVerso *gtk.Entry) bool {
 	var cmd *exec.Cmd
 
 	if fileName.GetText() != "" {
+
+		nbVerso := int(math.Ceil(float64(nbPages/2)) + 1)
+
 		if txtVerso.GetText() != "" {
-			nbVerso, err := strconv.Atoi(txtVerso.GetText())
-			if err == nil {
+			nbVerso, _ = strconv.Atoi(txtVerso.GetText())
+		}
 
-				if nbVerso < nbPages {
-					j := nbVerso
+		if nbVerso < nbPages {
+			j := nbVerso
 
-					cmdText := "cat "
-					for i := 1; i < nbPages; i++ {
-						if i < nbVerso {
-							cmdText += " " + strconv.Itoa(i)
-						}
-						if j <= nbPages {
-							cmdText += " " + strconv.Itoa(j)
-						}
-						j++
-					}
-
-					if err != nil {
-						return false
-					}
-
-					cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
-					ko := cmd.Run()
-
-					if ko != nil {
-						return false
-					}
-					return true
+			cmdText := "cat "
+			for i := 1; i < nbPages; i++ {
+				if i < nbVerso {
+					cmdText += " " + strconv.Itoa(i)
 				}
+				if j <= nbPages {
+					cmdText += " " + strconv.Itoa(j)
+				}
+				j++
 			}
+
+			cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
+			ko := cmd.Run()
+
+			if ko != nil {
+				return false
+			}
+			return true
 		}
 	}
 	return false
