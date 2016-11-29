@@ -3,13 +3,13 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
-	"io/ioutil"
-	"os"
-	"runtime"
 
 	"github.com/mattn/go-gtk/glib"
 	"github.com/mattn/go-gtk/gtk"
@@ -102,7 +102,7 @@ func main() {
 
 			//normalizeFileName(fileName.GetText())
 			createTempFile()
-			saveFile(inFile,fileName.GetText())
+			saveFile(inFile, fileName.GetText())
 			filechooserdialog.Destroy()
 		})
 		filechooserdialog.Run()
@@ -134,7 +134,7 @@ func main() {
 		if txtVerso.GetText() != "" {
 			catFile(fileName, txtVerso)
 			displayfile(outFile)
-		}else{
+		} else {
 			displayfile(inFile)
 		}
 
@@ -159,6 +159,7 @@ func main() {
 	window.SetSizeRequest(600, 600)
 	window.ShowAll()
 	gtk.Main()
+
 }
 
 func getNumberOfPAges(filename string) int {
@@ -213,7 +214,7 @@ func catFile(fileName, txtVerso *gtk.Entry) string {
 					log.Fatal(err)
 				}
 
-				cmd = exec.Command("bash", "-c", "pdftk " + inFile + " " + cmdText +" output " + outFile)
+				cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
 				ko := cmd.Run()
 
 				if ko != nil {
@@ -232,7 +233,7 @@ func displayfile(file string) {
 
 	if runtime.GOOS == "linux" {
 		cmd = exec.Command("xdg-open", file)
-	}else if runtime.GOOS == "windows" {
+	} else if runtime.GOOS == "windows" {
 		cmd = exec.Command("start", file)
 	}
 	err := cmd.Run()
@@ -241,14 +242,13 @@ func displayfile(file string) {
 	}
 }
 
-
 /*
 **
 **  Create in and out temporary Files for safety manipulations
 **
 **/
 
-func createTempFile(){
+func createTempFile() {
 
 	//creating temp file
 	in, err := ioutil.TempFile("", "in.pdf")
@@ -274,7 +274,7 @@ func createTempFile(){
 ** @Params filename string - output file
 ** @Params input string - input file for content
 **/
-func saveFile (filename string, input string) {
+func saveFile(filename string, input string) {
 	in, err := ioutil.ReadFile(input)
 	if err != nil {
 		log.Fatal(err)
