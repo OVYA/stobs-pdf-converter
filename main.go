@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -78,6 +77,9 @@ func main() {
 
 	lblVerso := gtk.NewLabel("Indiquer la première page Verso: ")
 	txtVerso := gtk.NewEntry()
+	txtVerso.Connect("changed", func() {
+		cat = false
+	})
 
 	// bouton ouverture file dialog
 	btOpenFile := gtk.NewButtonWithLabel("Ouvrir")
@@ -112,13 +114,21 @@ func main() {
 	btSave := gtk.NewButtonWithLabel("Enregistrer")
 	btSave.Clicked(func() {
 		if txtVerso.GetText() != "" && !cat {
-			catFile(fileName, txtVerso)
+			cat = catFile(fileName, txtVerso)
 		}
 
 		if cat == true {
 			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
 			saveFile(file, outFile)
-			dial := gtk.NewMessageDialog(window, 1, 1, 1, "La modification du PDF a été effectué avec succès ")
+			dial := gtk.NewMessageDialog(window, 1, 1, 1, "La modification du PDF a été effectué avec succès.")
+			dial.Response(func() {
+				dial.Destroy()
+				cat = false
+			})
+
+			dial.Run()
+		} else {
+			dial := gtk.NewMessageDialog(window, 1, 1, 1, "Aucune modification n'a été apportée au fichier.")
 			dial.Response(func() {
 				dial.Destroy()
 				cat = false
@@ -132,8 +142,18 @@ func main() {
 	btShowFile := gtk.NewButtonWithLabel("Visualiser le fichier")
 	btShowFile.Clicked(func() {
 		if txtVerso.GetText() != "" {
-			catFile(fileName, txtVerso)
-			displayfile(outFile)
+			cat = catFile(fileName, txtVerso)
+			if cat {
+				displayfile(outFile)
+			} else {
+				dial := gtk.NewMessageDialog(window, 1, 1, 1, "La valeur indiquée pour la page Verso n'est pas valide ")
+				dial.Response(func() {
+					dial.Destroy()
+					cat = false
+				})
+
+				dial.Run()
+			}
 		} else {
 			displayfile(inFile)
 		}
@@ -187,45 +207,44 @@ func getNumberOfPAges(filename string) int {
 	return ret
 }
 
-func catFile(fileName, txtVerso *gtk.Entry) string {
+func catFile(fileName, txtVerso *gtk.Entry) bool {
 	var cmd *exec.Cmd
-	var ret string
+
 	if fileName.GetText() != "" {
 		if txtVerso.GetText() != "" {
 			nbVerso, err := strconv.Atoi(txtVerso.GetText())
-			if err != nil {
-				log.Fatal(err)
-			}
-			if nbVerso < nbPages {
-				j := nbVerso
+			if err == nil {
 
-				cmdText := "cat "
-				for i := 1; i < nbPages; i++ {
-					if i < nbVerso {
-						cmdText += " " + strconv.Itoa(i)
+				if nbVerso < nbPages {
+					j := nbVerso
+
+					cmdText := "cat "
+					for i := 1; i < nbPages; i++ {
+						if i < nbVerso {
+							cmdText += " " + strconv.Itoa(i)
+						}
+						if j <= nbPages {
+							cmdText += " " + strconv.Itoa(j)
+						}
+						j++
 					}
-					if j <= nbPages {
-						cmdText += " " + strconv.Itoa(j)
+
+					if err != nil {
+						return false
 					}
-					j++
-				}
 
-				if err != nil {
-					log.Fatal(err)
-				}
+					cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
+					ko := cmd.Run()
 
-				cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
-				ko := cmd.Run()
-
-				if ko != nil {
-					fmt.Println(ko)
-					log.Fatal(ko)
+					if ko != nil {
+						return false
+					}
+					return true
 				}
-				cat = true
 			}
 		}
 	}
-	return ret
+	return false
 }
 
 func displayfile(file string) {
