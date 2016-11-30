@@ -40,9 +40,6 @@ func main() {
 	// label info fichier
 	lblPage := gtk.NewLabel("")
 
-	// label info
-	lblInfo := gtk.NewLabel("Par défaut la première page Verso est situé à la moitié")
-
 	// txtBox file
 	lblFileName := gtk.NewLabel("Nom du fichier: ")
 	fileName := gtk.NewLabel("")
@@ -75,6 +72,7 @@ func main() {
 				fileName.SetText(filechooserdialog.GetFilename())
 				nbPages = getNumberOfPAges(filechooserdialog.GetFilename())
 				lblPage.SetText("Le fichier séléctionné contient " + strconv.Itoa(nbPages) + " pages.")
+				txtVerso.SetText(strconv.Itoa(int(math.Ceil(float64(nbPages/2)) + 1)))
 			}
 
 			//normalizeFileName(fileName.GetText())
@@ -172,7 +170,6 @@ func main() {
 	optBox1.Add(txtVerso)
 
 	fBoxOpt.PackStart(optBox1, false, false, 10)
-	fBoxOpt.PackStart(lblInfo, false, false, 10)
 	fBoxOpt.PackStart(btShowFile, false, false, 10)
 
 	vpaned.Pack1(vboxContent, false, false)
@@ -218,11 +215,7 @@ func catFile(fileName *gtk.Label, txtVerso *gtk.Entry) bool {
 
 	if fileName.GetText() != "" {
 
-		nbVerso := int(math.Ceil(float64(nbPages/2)) + 1)
-
-		if txtVerso.GetText() != "" {
-			nbVerso, _ = strconv.Atoi(txtVerso.GetText())
-		}
+		nbVerso, _ := strconv.Atoi(txtVerso.GetText())
 
 		if nbVerso < nbPages {
 			j := nbVerso
