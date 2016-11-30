@@ -53,3 +53,12 @@ From a selected pdf file you choose the first back page and stobs reorganized al
 * select the first back page  _the total number of pages is indicate_
 * display the new two-sided file
 * save the file __the file will be saved with extension _recto_verso_ok.pdf in original folder file__
+
+
+# Environement de developpement
+
+## installation de la lib go-gtk
+
+* go get github.com/mattn/go-gtk/gtk
+__installation des dependances__
+* apt-get install libgtk2.0-dev libglib2.0-dev libgtksourceview2.0-dev
