@@ -34,7 +34,7 @@ func main() {
 	})
 
 	// TITLE
-	label := gtk.NewLabel("organisez vos PDF en Recto/Verso")
+	label := gtk.NewLabel("Convertir un PDF en Recto/Verso")
 	label.ModifyFontEasy("DejaVu Serif 14")
 
 	// label info fichier
@@ -92,9 +92,9 @@ func main() {
 		cat = catFile(fileName, txtVerso)
 
 		if cat == true {
-			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso_ok.pdf", 1)
+			file := strings.Replace(fileName.GetText(), ".pdf", "_recto_verso.pdf", 1)
 			saveFile(file, outFile)
-			dial := gtk.NewMessageDialog(window, 1, 1, 1, "La modification du PDF a été effectué avec succès.")
+			dial := gtk.NewMessageDialog(window, 1, 1, 1, "Le PDF recto/verso généré est "+file)
 			dial.Response(func() {
 				dial.Destroy()
 				cat = false
