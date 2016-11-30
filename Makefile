@@ -6,7 +6,7 @@ install: glide-install
 	go install
 
 .PHONY: build
-build:
+build: vendor
 	go build
 
 .PHONY: glide-update
@@ -14,5 +14,8 @@ glide-update:
 	glide update
 
 .PHONY: glide-install
-glide-install:
+glide-install: vendor
+	glide install
+
+vendor:
 	glide install
