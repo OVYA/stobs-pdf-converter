@@ -28,7 +28,7 @@ From a selected pdf file you choose the first back page and stobs reorganized al
     Priority: optional
     Architecture: all
     Depends: bash,evince, pdftk
-    Maintainer: Dubosts Renaud
+    Maintainer: Ovya
     Description: "Organisez vos pdf en recto/verso"
 
 ### Generate stobs binary
