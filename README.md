@@ -1,25 +1,17 @@
 # Documentation
 
 __stobs__ is a software which gives you the possibility to reorganized your scanned pdf files.
-It can be used on Linux, Windows and MacOsX platform.
 From a selected pdf file you choose the first back page and stobs reorganized all the pages for an eventually print
 
+### MakeFile description
+* make all : launch the make install
+* make install : install glide and build the go program
+* make build : generate the project binary
+* make glide-install : install all project dependancies
+* make glide-update : update all project dependancies
+* make vendor : install all dependancies
+* make package : create the project .deb package
 
-## stobs.deb package creation
-* mkdir package
-* mkdir stobs 
-* cd package/stobs
-* mkdir DEBIAN
-* touch DEBIAN/control
-* touch DEBIAN/postinst
-* touch DEBIAN/postrm
-* touch DEBIAN/preinst
-* touch DEBIAN/prerm
-* chmod 755 DEBIAN/post*
-* chmod 755 DEBIAN/pre*
-* mkdir usr
-* mkdir usr/bin
-  
 ### Fill the __Control__ file
 
     Package: stobs
@@ -27,9 +19,9 @@ From a selected pdf file you choose the first back page and stobs reorganized al
     Section: base
     Priority: optional
     Architecture: all
-    Depends: bash,evince, pdftk
+    Depends: bash, pdftk
     Maintainer: Ovya
-    Description: "Organisez vos pdf en recto/verso"
+    Description: "reorganize your pdf in two-sided format"
 
 ### Generate stobs binary
 
@@ -55,10 +47,11 @@ From a selected pdf file you choose the first back page and stobs reorganized al
 * save the file __the file will be saved with extension _recto_verso_ok.pdf in original folder file__
 
 
-# Environement de developpement
+# Development environment
 
-## installation de la lib go-gtk
+## installation of go-gtk lib
 
 * go get github.com/mattn/go-gtk/gtk
 __installation des dependances__
 * apt-get install libgtk2.0-dev libglib2.0-dev libgtksourceview2.0-dev
+you can follow instruction on the github project page at https://github.com/mattn/go-gtk
