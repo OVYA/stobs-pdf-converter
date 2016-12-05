@@ -1,0 +1,8 @@
+Package: stobs
+Version: 1.0
+Section: base
+Priority: optional
+Architecture: all
+Depends: bash,pdftk,evince
+Maintainer: Dubosts Renaud
+Description: "Organisez vos pdf en recto/verso"
