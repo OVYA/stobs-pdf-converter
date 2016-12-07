@@ -20,8 +20,8 @@ glide-install: vendor
 vendor:
 	glide install
 
-.PHONY: package
-package:
+.PHONY: deb
+deb:
 	go build
 	mv stobs package/stobs/usr/bin/
 	dpkg-deb --build package/stobs

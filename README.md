@@ -10,7 +10,7 @@ From a selected pdf file you choose the first back page and stobs reorganized al
 * make glide-install : install all project dependancies
 * make glide-update : update all project dependancies
 * make vendor : install all dependancies
-* make package : create the project .deb package
+* make deb : create the project .deb package
 
 ### Fill the __Control__ file
 
