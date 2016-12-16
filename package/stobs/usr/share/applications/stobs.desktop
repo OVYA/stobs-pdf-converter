@@ -1,0 +1,21 @@
+[Desktop Entry]
+Categories=Office
+Comment[en_US]=reorganize your pdf on two-sided format
+Comment=reorganize your pdf on two-sided format
+Encoding=UTF-8
+Exec=/usr/bin/stobs
+GenericName[en_US]=
+GenericName=
+Icon=/home/rdu/Documents/stobs/package/stobs/usr/share/stobs/1.0/etc/stobs.png
+MimeType=
+Name[en_US]=Stobs
+Name=Stobs
+Path=
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+X-DBUS-ServiceName=
+X-DBUS-StartupType=
+X-KDE-SubstituteUID=false
+X-KDE-Username=
