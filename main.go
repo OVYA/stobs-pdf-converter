@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"io/ioutil"
 	"log"
 	"math"
@@ -107,6 +106,7 @@ func main() {
 	btShowFile.Clicked(func() {
 		if fileName.GetText() != "" {
 			cat = catFile(fileName, txtVerso)
+
 			if cat {
 				displayfile(outFile)
 			} else {
@@ -187,26 +187,16 @@ func main() {
 
 func getNumberOfPAges(filename string) int {
 
-	cmd := exec.Command("pdftk", filename, "dump_data")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	res := strings.Split(out.String(), "\n")
-	var fileInfo map[string]string
-	fileInfo = make(map[string]string)
-	for i := 0; i < len(res); i++ {
-		value := strings.Split(res[i], ": ")
-		if len(value) == 2 {
-			fileInfo[value[0]] = value[1]
-		}
-	}
-	ret, err := strconv.Atoi(fileInfo["NumberOfPages"])
+	cmd := exec.Command("qpdf", filename, "--show-npages")
+	var out, err = cmd.Output()
+
+	nb := strings.Split(string(out), "\n")
+
+	ret, err := strconv.Atoi(nb[0])
 	if err != nil {
 		return 0
 	}
+
 	return ret
 }
 
@@ -220,18 +210,20 @@ func catFile(fileName *gtk.Label, txtVerso *gtk.Entry) bool {
 		if nbVerso < nbPages {
 			j := nbVerso
 
-			cmdText := "cat "
+			cmdText := ""
 			for i := 1; i < nbPages; i++ {
 				if i < nbVerso {
-					cmdText += " " + strconv.Itoa(i)
+					cmdText += strconv.Itoa(i) + ","
 				}
-				if j <= nbPages {
-					cmdText += " " + strconv.Itoa(j)
+				if j < nbPages {
+					cmdText += strconv.Itoa(j) + ","
+				} else if j == nbPages {
+					cmdText += strconv.Itoa(j)
 				}
 				j++
 			}
 
-			cmd = exec.Command("bash", "-c", "pdftk "+inFile+" "+cmdText+" output "+outFile)
+			cmd = exec.Command("bash", "-c", "qpdf --empty --pages "+inFile+" "+cmdText+" -- "+outFile)
 			ko := cmd.Run()
 
 			if ko != nil {
@@ -266,9 +258,9 @@ func displayfile(file string) {
 func createTempFile() {
 
 	//creating temp file
-	in, err := ioutil.TempFile("", "in.pdf")
+	in, err := ioutil.TempFile("", "in")
 
-	out, err := ioutil.TempFile("", "out.pdf")
+	out, err := ioutil.TempFile("", "out")
 
 	if err != nil {
 		log.Fatal(err)

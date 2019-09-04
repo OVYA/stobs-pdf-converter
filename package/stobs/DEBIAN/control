@@ -4,6 +4,6 @@ Version: 1.0
 Section: File Management
 Priority: optional
 Architecture: all
-Depends: bash,pdftk
+Depends: bash,qpdf
 Maintainer: Dubosts Renaud
 Description: "Reorganize your pdf in two-sided format"
